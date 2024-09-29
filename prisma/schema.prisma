@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["omitApi"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AddressType {
+  HOME
+  WORK
+  BILLING
+  SHIPPING
+  OTHER
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+model Role {
+  id              Int               @id @default(autoincrement())
+  name            String            @unique
+  users           User[]
+  rolePermissions RolePermissions[]
+
+  @@map("role")
+}
+
+model Permission {
+  id              Int               @id @default(autoincrement())
+  name            String
+  slug            String
+  rolePermissions RolePermissions[]
+
+  @@map("permission")
+}
+
+model RolePermissions {
+  id           Int        @id @default(autoincrement())
+  roleId       Int        @map("role_id")
+  role         Role       @relation(fields: [roleId], references: [id])
+  permissionId Int        @map("permission_id")
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@map("role_permissions")
+}
+
+model User {
+  id          Int       @id @default(autoincrement())
+  name        String
+  email       String?
+  phoneNumber String    @unique @map("phone_number")
+  profileUrl  String?   @map("profile_url")
+  gender      Gender?
+  roleId      Int?      @map("role_id")
+  role        Role?     @relation(fields: [roleId], references: [id])
+  password    String
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  addresses   Address[]
+
+  @@map("user")
+}
+
+model Address {
+  id        Int         @id @default(autoincrement())
+  userId    Int         @map("user_id")
+  user      User        @relation(fields: [userId], references: [id])
+  address1  String      @map("address_1")
+  address2  String?     @map("address_2")
+  city      String
+  state     String
+  country   String
+  pincode   String
+  type      AddressType
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+  isActive  Boolean     @default(true) @map("is_active")
+
+  @@map("address")
+}
